@@ -12,11 +12,11 @@ const Header = () => {
           <Link to="/" className="text-2xl font-bold text-blue-600">PetPal</Link>
           <nav className="hidden md:flex space-x-6">
             <Link to="/" className="text-gray-600 hover:text-blue-600 transition duration-300">Home</Link>
-            <Link to="/browse-pets" className="text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
-            <Link to="/donate" className="text-gray-600 hover:text-blue-600 transition duration-300">Donate</Link>
-            <Link to="/shelters" className="text-gray-600 hover:text-blue-600 transition duration-300">Shelters</Link>
+            <Link to="/pets" className="text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
+            
+            <Link to="/shelter" className="text-gray-600 hover:text-blue-600 transition duration-300">Shelters</Link>
             <Link to="/about" className="text-gray-600 hover:text-blue-600 transition duration-300">About Us</Link>
-            <Link to="/contact" className="text-gray-600 hover:text-blue-600 transition duration-300">Contact</Link>
+            
           </nav>
           <div className="hidden md:block">
             <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition duration-300">Login / Sign Up</Link>
@@ -66,7 +66,7 @@ const HeroSection = () => (
       </p>
       <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
         <Link
-          to="/browse-pets"
+          to="/pets"
           className="bg-white text-blue-600 px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-100 transition duration-300 animate-slide-up"
         >
           Browse Pets
@@ -167,10 +167,10 @@ const FeaturesOverview = () => (
 const FeaturedPets = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const pets = [
-    { id: 1, name: 'Max', age: 3, breed: 'Golden Retriever', location: 'New York, NY', image: '/pet1.jpg' },
-    { id: 2, name: 'Luna', age: 2, breed: 'Siamese Cat', location: 'Los Angeles, CA', image: '/pet2.jpg' },
-    { id: 3, name: 'Buddy', age: 5, breed: 'Labrador', location: 'Chicago, IL', image: '/pet3.jpg' },
-    { id: 4, name: 'Bella', age: 1, breed: 'French Bulldog', location: 'Houston, TX', image: '/pet4.jpg' },
+    { id: 1, name: 'Max', age: 3, breed: 'Golden Retriever', location: 'New York, NY', image: 'https://tse4.mm.bing.net/th?id=OIP.08koL6WINLABYfJRgfw8rwHaE8&pid=Api&P=0&h=180' },
+    { id: 2, name: 'Luna', age: 2, breed: 'Siamese Cat', location: 'Los Angeles, CA', image: 'https://tse3.mm.bing.net/th?id=OIP.O4KrqOe8mAKWxx6y0ZaFZwHaE8&pid=Api&P=0&h=180' },
+    { id: 3, name: 'Buddy', age: 5, breed: 'Labrador', location: 'Chicago, IL', image: 'https://tse3.mm.bing.net/th?id=OIP.aqF33gxnIodSAMxUhOeGOQHaE8&pid=Api&P=0&h=180' },
+    { id: 4, name: 'Bella', age: 1, breed: 'French Bulldog', location: 'Houston, TX', image: 'https://tse4.mm.bing.net/th?id=OIP.ebNREQ_nRAmt3HddvNRItgHaF-&pid=Api&P=0&h=180' },
   ];
 
   const nextSlide = () => {

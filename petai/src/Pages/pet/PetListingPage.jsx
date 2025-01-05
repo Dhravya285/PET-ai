@@ -2,17 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, Heart, ChevronDown, X } from 'lucide-react';
 
-// Placeholder data for pet listings
-const petData = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `Pet ${i + 1}`,
-  breed: ['Labrador', 'Siamese', 'Golden Retriever', 'Persian'][Math.floor(Math.random() * 4)],
-  age: Math.floor(Math.random() * 15) + 1,
-  size: ['Small', 'Medium', 'Large'][Math.floor(Math.random() * 3)],
-  location: ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX'][Math.floor(Math.random() * 4)],
-  image: `/placeholder.svg?height=300&width=300&text=Pet+${i + 1}`,
-  status: Math.random() > 0.2 ? 'Available' : 'Adopted',
-}));
+const petData = [
+  { id: 1, name: "Max", breed: "Labrador Retriever", age: 3, size: "Large", location: "New York, NY", image: "https://i.pinimg.com/originals/6b/62/13/6b62135c56a67ff7858481a220201b01.jpg", status: "Available" },
+  { id: 2, name: "Luna", breed: "Siamese Cat", age: 2, size: "Medium", location: "Los Angeles, CA", image: "https://www.loveyourcat.com/wp-content/uploads/2022/05/Closeup-a-Ginger-Maine-Coon-cat-mixed-Persian-cat-age.jpg", status: "Available" },
+  { id: 3, name: "Buddy", breed: "Golden Retriever", age: 5, size: "Large", location: "Chicago, IL", image: "https://tse4.mm.bing.net/th?id=OIP.L5Kj60NSTrga_4vq-PlpZwHaD3&pid=Api&P=0&h=180", status: "Adopted" },
+  { id: 4, name: "Bella", breed: "Persian Cat", age: 4, size: "Small", location: "Houston, TX", image: "https://tse1.mm.bing.net/th?id=OIP.GlctjvGSr-oc56b2IzZ_pwHaDt&pid=Api&P=0&h=180", status: "Available" },
+  { id: 5, name: "Charlie", breed: "Beagle", age: 2, size: "Medium", location: "Phoenix, AZ", image: "https://tse2.mm.bing.net/th?id=OIP.R0RM5-MIifR2qOO-MJ_BJAHaFS&pid=Api&P=0&h=180", status: "Available" },
+  { id: 6, name: "Lucy", breed: "Maine Coon", age: 3, size: "Large", location: "Philadelphia, PA", image: "https://mainecoon.org/wp-content/uploads/2023/01/14-beautiful-maine-coon-975x1024.jpg", status: "Available" },
+//   { id: 7, name: "Cooper", breed: "German Shepherd", age: 4, size: "Large", location: "San Antonio, TX", image: "/placeholder.svg?height=300&width=300&text=Cooper", status: "Available" },
+//   { id: 8, name: "Nala", breed: "Ragdoll", age: 1, size: "Medium", location: "San Diego, CA", image: "/placeholder.svg?height=300&width=300&text=Nala", status: "Available" },
+//   { id: 9, name: "Rocky", breed: "Rottweiler", age: 6, size: "Large", location: "Dallas, TX", image: "/placeholder.svg?height=300&width=300&text=Rocky", status: "Adopted" },
+//   { id: 10, name: "Milo", breed: "Sphynx", age: 2, size: "Small", location: "San Jose, CA", image: "/placeholder.svg?height=300&width=300&text=Milo", status: "Available" },
+//   { id: 11, name: "Daisy", breed: "Poodle", age: 3, size: "Medium", location: "Austin, TX", image: "/placeholder.svg?height=300&width=300&text=Daisy", status: "Available" },
+//   { id: 12, name: "Leo", breed: "Bengal Cat", age: 2, size: "Medium", location: "Jacksonville, FL", image: "/placeholder.svg?height=300&width=300&text=Leo", status: "Available" },
+//   { id: 13, name: "Zoe", breed: "Boxer", age: 4, size: "Large", location: "San Francisco, CA", image: "/placeholder.svg?height=300&width=300&text=Zoe", status: "Available" },
+//   { id: 14, name: "Oliver", breed: "Scottish Fold", age: 1, size: "Small", location: "Columbus, OH", image: "/placeholder.svg?height=300&width=300&text=Oliver", status: "Available" },
+//   { id: 15, name: "Molly", breed: "Siberian Husky", age: 3, size: "Large", location: "Fort Worth, TX", image: "/placeholder.svg?height=300&width=300&text=Molly", status: "Adopted" },
+//   { id: 16, name: "Tiger", breed: "Tabby Cat", age: 5, size: "Medium", location: "Charlotte, NC", image: "/placeholder.svg?height=300&width=300&text=Tiger", status: "Available" },
+//   { id: 17, name: "Bentley", breed: "Pug", age: 2, size: "Small", location: "Seattle, WA", image: "/placeholder.svg?height=300&width=300&text=Bentley", status: "Available" },
+//   { id: 18, name: "Simba", breed: "Orange Tabby", age: 1, size: "Medium", location: "Denver, CO", image: "/placeholder.svg?height=300&width=300&text=Simba", status: "Available" },
+//   { id: 19, name: "Lola", breed: "French Bulldog", age: 3, size: "Small", location: "Nashville, TN", image: "/placeholder.svg?height=300&width=300&text=Lola", status: "Available" },
+//   { id: 20, name: "Oreo", breed: "Tuxedo Cat", age: 4, size: "Medium", location: "Boston, MA", image: "/placeholder.svg?height=300&width=300&text=Oreo", status: "Available" }
+// ];
+];
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,11 +36,11 @@ const Header = () => {
           <Link to="/" className="text-2xl font-bold text-blue-600">PetPal</Link>
           <nav className="hidden md:flex space-x-6">
             <Link to="/" className="text-gray-600 hover:text-blue-600 transition duration-300">Home</Link>
-            <Link to="/browse-pets" className="text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
-            <Link to="/donate" className="text-gray-600 hover:text-blue-600 transition duration-300">Donate</Link>
-            <Link to="/shelters" className="text-gray-600 hover:text-blue-600 transition duration-300">Shelters</Link>
+            <Link to="/pets" className="text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
+            
+            <Link to="/shelter" className="text-gray-600 hover:text-blue-600 transition duration-300">Shelters</Link>
             <Link to="/about" className="text-gray-600 hover:text-blue-600 transition duration-300">About Us</Link>
-            <Link to="/contact" className="text-gray-600 hover:text-blue-600 transition duration-300">Contact</Link>
+            
           </nav>
           <div className="hidden md:block">
             <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition duration-300">Login / Sign Up</Link>
@@ -42,11 +54,11 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="mt-4 md:hidden">
             <Link to="/" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Home</Link>
-            <Link to="/browse-pets" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
-            <Link to="/donate" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Donate</Link>
+            <Link to="/pets" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Browse Pets</Link>
+            {/* <Link to="/donate" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Donate</Link> */}
             <Link to="/shelters" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Shelters</Link>
             <Link to="/about" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">About Us</Link>
-            <Link to="/contact" className="block py-2 text-gray-600 hover:text-blue-600 transition duration-300">Contact</Link>
+            
             <Link to="/login" className="block py-2 text-blue-600 hover:text-blue-700 transition duration-300">Login / Sign Up</Link>
           </nav>
         )}
@@ -167,37 +179,24 @@ const SearchAndFilterSection = ({ onSearch, onFilter }) => {
   );
 };
 
-const PetCard = ({ pet }) => {
-  const [isSaved, setIsSaved] = useState(false);
-
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
-      <div className="relative">
-        <img src={pet.image} alt={pet.name} className="w-full h-48 object-cover" />
-        <span className={`absolute top-0 right-0 m-2 px-2 py-1 rounded text-xs font-semibold ${pet.status === 'Available' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-          {pet.status}
-        </span>
-      </div>
-      <div className="p-4">
-        <h3 className="text-xl font-semibold mb-2">{pet.name}</h3>
-        <p className="text-gray-600 mb-2">{pet.breed}</p>
-        <p className="text-gray-500 mb-2">{pet.age} years old • {pet.size}</p>
-        <p className="text-gray-500 mb-4">{pet.location}</p>
-        <div className="flex justify-between items-center">
-          <Link to={`/pet/${pet.id}`} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
-            View Details
-          </Link>
-          <button
-            onClick={() => setIsSaved(!isSaved)}
-            className={`p-2 rounded-full ${isSaved ? 'text-red-500' : 'text-gray-400'} hover:bg-gray-100 transition duration-300`}
-          >
-            <Heart size={24} fill={isSaved ? 'currentColor' : 'none'} />
-          </button>
-        </div>
-      </div>
+const PetCard = ({ pet }) => (
+  <Link to={`/pet/${pet.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+    <div className="relative">
+      <img src={pet.image} alt={pet.name} className="w-full h-48 object-cover" />
+      <span className={`absolute top-0 right-0 m-2 px-2 py-1 rounded text-xs font-semibold ${
+        pet.status === 'Available' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+      }`}>
+        {pet.status}
+      </span>
     </div>
-  );
-};
+    <div className="p-4">
+      <h3 className="text-xl font-semibold mb-2">{pet.name}</h3>
+      <p className="text-gray-600 mb-2">{pet.breed}</p>
+      <p className="text-gray-500 mb-2">{pet.age} years old • {pet.size}</p>
+      <p className="text-gray-500">{pet.location}</p>
+    </div>
+  </Link>
+);
 
 const Sidebar = ({ onFilter }) => {
   const [filters, setFilters] = useState({
@@ -286,7 +285,7 @@ const Footer = () => (
             </a>
             <a href="#" className="text-white hover:text-blue-400 transition duration-300">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.772-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
               </svg>
             </a>
           </div>
@@ -383,4 +382,61 @@ const PetListingPage = () => {
 };
 
 export default PetListingPage;
+
+//This is a comment added to the code to illustrate a continuation after an unexpected cut-off.  The original code was a React component for a pet listing page.  We could add more features here, such as:
+
+//1.  Improved filtering: Add more filter options (e.g., color, temperament) and more sophisticated filtering logic.
+//2.  Pet detail page: Create a `/pet/:id` route to display detailed information about a specific pet.
+//3.  User authentication: Implement user login and registration to allow users to save pets and manage their profiles.
+//4.  Server-side data fetching: Replace the placeholder `petData` with data fetched from a backend API.
+//5.  Responsive design: Optimize the layout for different screen sizes and devices.
+//6.  Accessibility improvements: Ensure the page is accessible to users with disabilities.
+//7.  Error handling: Add error handling to gracefully handle network errors and other unexpected issues.
+//8.  Testing: Write unit and integration tests to ensure the code is robust and reliable.
+//9.  Styling: Refine the styling to improve the visual appeal of the page.  Consider using a CSS framework like Tailwind CSS or Material UI.
+//10. Search functionality improvements:  Implement fuzzy matching or other advanced search algorithms for better search results.
+
+
+//Example of adding a simple loading indicator while fetching data from an API:
+
+// import React, { useState, useEffect } from 'react';
+// // ... other imports
+
+// const PetListingPage = () => {
+//   const [pets, setPets] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   // ... other state variables
+
+//   useEffect(() => {
+//     const fetchPets = async () => {
+//       try {
+//         const response = await fetch('/api/pets');
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+//         const data = await response.json();
+//         setPets(data);
+//       } catch (error) {
+//         setError(error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchPets();
+//   }, []);
+
+//   if (loading) {
+//     return <div>Loading...</div>;
+//   }
+
+//   if (error) {
+//     return <div>Error: {error.message}</div>;
+//   }
+
+//   // ... rest of the component
+// };
+
+// export default PetListingPage;
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams,Link } from 'react-router-dom';
 import { Heart, DollarSign, MapPin } from 'lucide-react';
 
 const PetProfilePage = () => {
@@ -47,9 +47,9 @@ const PetProfilePage = () => {
               {pet.shelterLocation}
             </p>
           </div>
-          <button className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300 mr-4">
+        <Link to="/Pay"> <button className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300 mr-4">
             Adopt Now
-          </button>
+          </button></Link>
           <button className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-100 transition duration-300 flex items-center">
             <Heart className="mr-2" /> Save to Favorites
           </button>
