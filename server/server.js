@@ -1,11 +1,12 @@
 const dotenv = require("dotenv");
 const express = require('express');
-
+const userRoutes = require('./Routes/User');
 const cors = require('cors');
 const helmet = require('helmet')
 const connectDB = require('./config/db');
 const authRoutes = require('./Routes/auth');
 const googleRoutes = require('./Routes/google');
+const paymentRoutes = require('./Routes/payment');
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ connectDB();
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/google', googleRoutes);
-
+app.use('/api/payment', paymentRoutes);
+app.use('/api/user', userRoutes); 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

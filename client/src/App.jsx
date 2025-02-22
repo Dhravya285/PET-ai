@@ -15,6 +15,7 @@ import AboutPage from './Pages/pet/AboutPage.jsx';
 import ShelterListingPage from './Pages/pet/ShelterListingPage.jsx';
 import AIChatbot from './Pages/pet/AIChatbot.jsx';
 import NotFound from './Pages/pet/NotFound.jsx';
+import ProtectedRoute from './Pages/pet/ProtectedRoute.jsx';
 
 const App = () => {
   return (
@@ -35,6 +36,14 @@ const App = () => {
             <Route path="/about" element={<AboutPage/>}/>
             <Route path="/chat" element={<AIChatbot/>}/>
             <Route path="/*" element={<NotFound/>}/>
+            <Route 
+  path="/dashboard" 
+  element={
+    <ProtectedRoute>
+      <UserDashboard />
+    </ProtectedRoute>
+  } 
+/>
           </Routes>
         </main>
         <Footer />

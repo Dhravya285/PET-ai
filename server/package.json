@@ -15,6 +15,7 @@
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ethereumjs-util": "^7.1.5",
     "express": "^4.21.2",
     "google-auth-library": "^9.15.0",
     "helmet": "^8.0.0",
@@ -22,6 +23,8 @@
     "mongoose": "^8.9.4",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.9",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "razorpay": "^2.9.5",
+    "web3": "^1.10.0"
   }
 }

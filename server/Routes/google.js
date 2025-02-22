@@ -15,19 +15,64 @@ router.post('/google', async (req, res) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const { name, email, sub: googleId } = ticket.getPayload();
-    let user = await User.findOne({ email });
+    const { name, email, picture, sub: googleId } = ticket.getPayload();
+    
+    // Find or create user
+    let user = await User.findOne({ 
+      $or: [
+        { email },
+        { googleId }
+      ]
+    });
 
     if (!user) {
-      user = new User({ name, email, googleId, isVerified: true });
+      // Create new user
+      user = new User({
+        name,
+        email,
+        googleId,
+        profilePicture: picture,
+        isVerified: true,
+        authProvider: 'google'
+      });
       await user.save();
+    } else {
+      // Update existing user's Google ID if not present
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.isVerified = true;
+        user.authProvider = 'google';
+        await user.save();
+      }
     }
 
-    const jwtToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token: jwtToken, userId: user._id });
+    // Generate JWT token
+    const jwtToken = jwt.sign(
+      { 
+        id: user._id, 
+        email: user.email,
+        isVerified: user.isVerified
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({ 
+      token: jwtToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+        profilePicture: user.profilePicture
+      }
+    });
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'Google authentication failed' });
+    console.error('Google authentication error:', err);
+    res.status(400).json({ 
+      message: 'Google authentication failed',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 

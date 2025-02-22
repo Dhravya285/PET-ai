@@ -1,192 +1,216 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { CreditCard, Calendar, Lock, DollarSign, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { ethers } from 'ethers';
+import { QRCodeCanvas } from 'qrcode.react';
+import { useLocation } from 'react-router-dom';
 
-const PaymentPage = () => {
-  const { id } = useParams();
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expirationDate: '',
-    cvv: '',
-    amount: ''
-  });
-  const [errors, setErrors] = useState({});
+const PaymentForm = () => {
+  const location = useLocation();
+  const [userId, setUserId] = useState('');
+  const [petName, setPetName] = useState('');
+  const [adopterName, setAdopterName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [receipt, setReceipt] = useState(null);
+  const [error, setError] = useState('');
+  const [transactionHash, setTransactionHash] = useState('');
+  const upiId = "8147247980@ybl";
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setPaymentInfo(prev => ({ ...prev, [name]: value }));
+  // Load data from navigation state
+  useEffect(() => {
+    if (location.state) {
+      const { userId, petName, adopterName, amount } = location.state;
+      setUserId(userId || '');
+      setPetName(petName || '');
+      setAdopterName(adopterName || '');
+      setAmount(amount || '');
+    }
+  }, [location]);
+
+  const getRandomScheduleDate = () => {
+    const today = new Date();
+    const randomDays = Math.floor(Math.random() * (10 - 3 + 1)) + 3;
+    today.setDate(today.getDate() + randomDays);
+    return today.toISOString();
   };
 
-  const validateForm = () => {
-    let newErrors = {};
-    if (!paymentInfo.cardNumber.match(/^\d{16}$/)) {
-      newErrors.cardNumber = 'Card number must be 16 digits';
-    }
-    if (!paymentInfo.cardHolder) {
-      newErrors.cardHolder = 'Card holder name is required';
-    }
-    if (!paymentInfo.expirationDate.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
-      newErrors.expirationDate = 'Expiration date must be in MM/YY format';
-    }
-    if (!paymentInfo.cvv.match(/^\d{3,4}$/)) {
-      newErrors.cvv = 'CVV must be 3 or 4 digits';
-    }
-    if (!paymentInfo.amount || isNaN(paymentInfo.amount) || Number(paymentInfo.amount) <= 0) {
-      newErrors.amount = 'Please enter a valid amount';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Here you would typically send the payment info to your payment processor
-      console.log('Payment submitted:', paymentInfo);
-      alert('Payment processed successfully!');
-      // Redirect to a confirmation page or back to the pet profile
+
+    if (paymentMethod === "MetaMask") {
+      handleMetaMaskPayment();
+    } else if (paymentMethod === "UPI") {
+      setReceipt({
+        receiptNumber: `TXN-${Math.floor(Math.random() * 1000000)}`,
+        adopterName,
+        petName,
+        amount,
+        paymentMethod,
+        paymentDate: new Date().toISOString(),
+        scheduleDate: getRandomScheduleDate(),
+      });
+    } else {
+      try {
+        const response = await axios.post('http://localhost:5001/api/payment/pay', {
+          userId,
+          petName,
+          adopterName,
+          amount,
+          paymentMethod,
+        });
+
+        setReceipt({ ...response.data.receipt, scheduleDate: getRandomScheduleDate() });
+        setError('');
+      } catch (err) {
+        setError('Payment failed. Please try again.');
+        setReceipt(null);
+      }
     }
+  };
+
+  const handleMetaMaskPayment = async () => {
+    if (!window.ethereum) {
+      setError("MetaMask is not installed. Please install it to proceed.");
+      return;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+      const senderAddress = await signer.getAddress();
+
+      const transaction = await signer.sendTransaction({
+        to: "0x8F356f33F2b04D911f758e3a9c3e292e607B0f4E",
+        value: ethers.parseEther(amount),
+      });
+
+      await transaction.wait();
+      setTransactionHash(transaction.hash);
+
+      setReceipt({
+        receiptNumber: `TXN-${Math.floor(Math.random() * 1000000)}`,
+        adopterName,
+        petName,
+        amount,
+        paymentMethod,
+        paymentDate: new Date().toISOString(),
+        scheduleDate: getRandomScheduleDate(),
+        transactionHash: transaction.hash,
+      });
+
+      setError("");
+    } catch (error) {
+      console.log(error);
+      setError("MetaMask transaction failed. Please try again.");
+    }
+  };
+
+  const generatePDF = () => {
+    if (!receipt) return;
+
+    const doc = new jsPDF();
+    doc.text('Payment Receipt', 20, 10);
+
+    doc.autoTable({
+      startY: 20,
+      head: [['Field', 'Details']],
+      body: [
+        ['Receipt Number', receipt.receiptNumber],
+        ['Adopter Name', receipt.adopterName],
+        ['Pet Name', receipt.petName],
+        ['Amount', `₹${receipt.amount}`],
+        ['Payment Method', receipt.paymentMethod],
+        ['Payment Date', new Date(receipt.paymentDate).toLocaleString()],
+        ['Schedule Date', new Date(receipt.scheduleDate).toLocaleDateString()],
+        ...(receipt.transactionHash ? [['Transaction Hash', receipt.transactionHash]] : []),
+      ],
+    });
+
+    doc.save(`Receipt_${receipt.receiptNumber}.pdf`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Payment Details</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            {id ? `Adoption fee for Pet ID: ${id}` : 'Make a donation'}
-          </p>
+    <div className="p-6 max-w-lg mx-auto bg-white shadow-lg rounded-lg">
+      <h1 className="text-2xl font-semibold mb-4">Pet Adoption Payment</h1>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="block font-medium">User ID:</label>
+          <input 
+            className="w-full p-2 border rounded bg-gray-100" 
+            type="text" 
+            value={userId} 
+            readOnly 
+          />
         </div>
-        <form onSubmit={handleSubmit} className="px-4 py-5 sm:p-6">
-          <div className="space-y-6">
-            <div>
-              <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700">
-                Card Number
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <CreditCard className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="cardNumber"
-                  id="cardNumber"
-                  className={`block w-full pl-10 sm:text-sm border-gray-300 rounded-md ${errors.cardNumber ? 'border-red-300' : ''}`}
-                  placeholder="1234 5678 9012 3456"
-                  value={paymentInfo.cardNumber}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {errors.cardNumber && <p className="mt-2 text-sm text-red-600">{errors.cardNumber}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="cardHolder" className="block text-sm font-medium text-gray-700">
-                Card Holder Name
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="cardHolder"
-                  id="cardHolder"
-                  className={`block w-full sm:text-sm border-gray-300 rounded-md ${errors.cardHolder ? 'border-red-300' : ''}`}
-                  placeholder="John Doe"
-                  value={paymentInfo.cardHolder}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {errors.cardHolder && <p className="mt-2 text-sm text-red-600">{errors.cardHolder}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="expirationDate" className="block text-sm font-medium text-gray-700">
-                  Expiration Date
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="expirationDate"
-                    id="expirationDate"
-                    className={`block w-full pl-10 sm:text-sm border-gray-300 rounded-md ${errors.expirationDate ? 'border-red-300' : ''}`}
-                    placeholder="MM/YY"
-                    value={paymentInfo.expirationDate}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                {errors.expirationDate && <p className="mt-2 text-sm text-red-600">{errors.expirationDate}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="cvv" className="block text-sm font-medium text-gray-700">
-                  CVV
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="cvv"
-                    id="cvv"
-                    className={`block w-full pl-10 sm:text-sm border-gray-300 rounded-md ${errors.cvv ? 'border-red-300' : ''}`}
-                    placeholder="123"
-                    value={paymentInfo.cvv}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                {errors.cvv && <p className="mt-2 text-sm text-red-600">{errors.cvv}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                Amount
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <DollarSign className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="amount"
-                  id="amount"
-                  className={`block w-full pl-10 sm:text-sm border-gray-300 rounded-md ${errors.amount ? 'border-red-300' : ''}`}
-                  placeholder="100.00"
-                  value={paymentInfo.amount}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {errors.amount && <p className="mt-2 text-sm text-red-600">{errors.amount}</p>}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Pay Now
-            </button>
-          </div>
-        </form>
-        <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-          <Link
-            to={id ? `/pet/${id}` : '/'}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        <div>
+          <label className="block font-medium">Pet Name:</label>
+          <input 
+            className="w-full p-2 border rounded bg-gray-100" 
+            type="text" 
+            value={petName} 
+            readOnly 
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Adopter Name:</label>
+          <input 
+            className="w-full p-2 border rounded bg-gray-100" 
+            type="text" 
+            value={adopterName} 
+            readOnly 
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Amount (ETH):</label>
+          <input 
+            className="w-full p-2 border rounded bg-gray-100" 
+            type="text" 
+            value={amount} 
+            readOnly 
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Payment Method:</label>
+          <select 
+            className="w-full p-2 border rounded" 
+            value={paymentMethod} 
+            onChange={(e) => setPaymentMethod(e.target.value)} 
+            required
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Link>
+            <option value="">Select Payment Method</option>
+            <option value="Card">Card</option>
+            <option value="UPI">UPI</option>
+            <option value="MetaMask">MetaMask</option>
+          </select>
         </div>
-      </div>
+        <button className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600" type="submit">
+          Submit Payment
+        </button>
+      </form>
+
+      {paymentMethod === "UPI" && (
+        <div className="mt-6 p-4 border rounded bg-gray-100 text-center">
+          <h2 className="text-lg font-semibold mb-2">Scan to Pay via UPI</h2>
+          <QRCodeCanvas value={`upi://pay?pa=${upiId}&pn=PetAdoption&am=${amount}&cu=INR`} size={150} />
+          <p className="mt-2">UPI ID: {upiId}</p>
+        </div>
+      )}
+
+      {receipt && (
+        <button 
+          onClick={generatePDF} 
+          className="mt-4 p-2 bg-green-500 text-white rounded hover:bg-green-600 w-full"
+        >
+          Download Receipt PDF
+        </button>
+      )}
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   );
 };
 
-export default PaymentPage;
-
+export default PaymentForm;
