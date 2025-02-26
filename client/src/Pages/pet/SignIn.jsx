@@ -6,71 +6,88 @@ const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(false);
   const navigate = useNavigate();
   
-  const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your actual client ID
+  // Temporarily hardcode the client ID for testing
+  const GOOGLE_CLIENT_ID = "586196....-7g12lcph7jiluvorll26cgko5j583eqp.apps.googleusercontent.com";
+  const API_BASE_URL = "http://localhost:5001";
+
+  // Debug logging
+  console.log('Environment check:', {
+    directEnv: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    allEnv: import.meta.env,
+    usingClientId: GOOGLE_CLIENT_ID
+  });
 
   useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) {
+      console.error('Google Client ID is not set in environment variables');
+      setError('Google Sign-In configuration error');
+      return;
+    }
+
     const loadGoogleScript = () => {
-      if (window.google) {
-        initializeGoogleSignIn();
-        return;
+      // Remove any existing Google script to prevent duplicates
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
       }
 
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
-      script.onload = initializeGoogleSignIn;
+      script.onload = () => {
+        initializeGoogleSignIn();
+      };
       document.head.appendChild(script);
+
+      return () => {
+        const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+        if (script) {
+          document.head.removeChild(script);
+        }
+      };
+    };
+
+    const initializeGoogleSignIn = () => {
+      if (!window.google) {
+        console.error('Google API not loaded');
+        return;
+      }
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignInCallback,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        setIsGoogleScriptLoaded(true);
+        
+        // Render the button immediately after initialization
+        window.google.accounts.id.renderButton(
+          document.getElementById('googleSignInButton'),
+          { theme: 'outline', size: 'large', width: '100%' }
+        );
+      } catch (err) {
+        console.error('Error initializing Google Sign-In:', err);
+        setError('Failed to initialize Google Sign-In');
+      }
     };
 
     loadGoogleScript();
-
-    return () => {
-      // Cleanup if needed
-      const buttonContainer = document.getElementById('googleSignInButton');
-      if (buttonContainer) {
-        buttonContainer.innerHTML = '';
-      }
-    };
-  }, []);
-
-  const initializeGoogleSignIn = () => {
-    if (!window.google || !GOOGLE_CLIENT_ID) return;
-
-    try {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleSignInCallback,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-
-      window.google.accounts.id.renderButton(
-        document.getElementById('googleSignInButton'),
-        {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-          width: '100%',
-        }
-      );
-    } catch (error) {
-      console.error('Error initializing Google Sign-In:', error);
-      setError('Failed to initialize Google Sign-In');
-    }
-  };
+  }, [GOOGLE_CLIENT_ID]);
 
   const handleGoogleSignInCallback = async (response) => {
     try {
-      const result = await fetch('http://localhost:5001/api/auth/google', {
+      const result = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           token: response.credential
         }),
@@ -80,6 +97,7 @@ const SignIn = () => {
       
       if (result.ok) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/UserDashboard');
       } else {
         setError(data.message || 'Google sign-in failed');
@@ -90,22 +108,50 @@ const SignIn = () => {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google Sign-In is not configured properly');
+      return;
+    }
+
+    if (isGoogleScriptLoaded && window.google) {
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // Try rendering the button as fallback
+            window.google.accounts.id.renderButton(
+              document.getElementById('googleSignInButton'),
+              { theme: 'outline', size: 'large', width: '100%' }
+            );
+          }
+        });
+      } catch (err) {
+        console.error('Error prompting Google Sign-In:', err);
+        setError('Failed to start Google Sign-In');
+      }
+    } else {
+      setError('Google Sign-In is not ready yet. Please try again in a moment.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/UserDashboard');
       } else {
         setError(data.message || 'Login failed');
@@ -171,7 +217,20 @@ const SignIn = () => {
           </div>
 
           {/* Google Sign-In Button Container */}
-          <div id="googleSignInButton" className="mt-4 flex justify-center"></div>
+          <div id="googleSignInButton">
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 transition duration-300 mt-4"
+            >
+              <svg viewBox="0 0 48 48" className="w-5 h-5">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+              </svg>
+              Sign in with Google
+            </button>
+          </div>
 
           <p className="mt-4 text-center">
             Don't have an account?{' '}

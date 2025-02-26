@@ -13,9 +13,11 @@ import PaymentPage from './Pages/pet/PaymentPage.jsx';
 import ShelterPage from './Pages/pet/ShelterListingPage.jsx';
 import AboutPage from './Pages/pet/AboutPage.jsx';
 import ShelterListingPage from './Pages/pet/ShelterListingPage.jsx';
-import AIChatbot from './Pages/pet/AIChatbot.jsx';
+
 import NotFound from './Pages/pet/NotFound.jsx';
 import ProtectedRoute from './Pages/pet/ProtectedRoute.jsx';
+import Chatbot from './Pages/pet/Chatbot.jsx';
+import AddPetForm from './components/admin/AddPetForm.jsx';
 
 const App = () => {
   return (
@@ -25,6 +27,7 @@ const App = () => {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/admin" element={<AddPetForm />} />
             <Route path="/pets" element={<PetListingPage />} />
             <Route path="/pet/:id" element={<PetProfilePage />} />
             <Route path="/dashboard" element={<UserDashboard />} />
@@ -34,7 +37,7 @@ const App = () => {
             <Route path="/Pay" element={<PaymentPage/>}/>
             <Route path="/shelter" element={<ShelterListingPage/>}/>
             <Route path="/about" element={<AboutPage/>}/>
-            <Route path="/chat" element={<AIChatbot/>}/>
+            <Route path="/chat" element={<Chatbot/>}/>
             <Route path="/*" element={<NotFound/>}/>
             <Route 
   path="/dashboard" 
@@ -44,6 +47,7 @@ const App = () => {
     </ProtectedRoute>
   } 
 />
+<Route path="/chatbot" element={<Chatbot/>}/>
           </Routes>
         </main>
         <Footer />

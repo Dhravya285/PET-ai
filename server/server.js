@@ -7,7 +7,8 @@ const connectDB = require('./config/db');
 const authRoutes = require('./Routes/auth');
 const googleRoutes = require('./Routes/google');
 const paymentRoutes = require('./Routes/payment');
-
+const ChatbotRoutes = require('./Routes/chatbot');
+const petRoutes = require('./Routes/pet');
 dotenv.config();
 
 const app = express();
@@ -42,5 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/google', googleRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/user', userRoutes); 
+app.use('/api/chatbot', ChatbotRoutes);
+app.use('/api/pets',petRoutes)
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
