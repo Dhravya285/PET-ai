@@ -2,11 +2,14 @@ const express = require('express');
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const dotenv = require('dotenv');
+
+dotenv.config({path:'../.env'});
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-router.post('/google', async (req, res) => {
+router.post('/', async (req, res) => {
   const { token } = req.body;
 
   try {
@@ -69,6 +72,7 @@ router.post('/google', async (req, res) => {
     });
   } catch (err) {
     console.error('Google authentication error:', err);
+    console.error('Error details:', err);
     res.status(400).json({ 
       message: 'Google authentication failed',
       error: process.env.NODE_ENV === 'development' ? err.message : undefined

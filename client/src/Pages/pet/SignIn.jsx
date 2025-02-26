@@ -10,7 +10,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   
   // Temporarily hardcode the client ID for testing
-  const GOOGLE_CLIENT_ID = "586196....-7g12lcph7jiluvorll26cgko5j583eqp.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID = "728119680462-pvl9llp07quggd6ru0qnm75ogakdd4id.apps.googleusercontent.com";
   const API_BASE_URL = "http://localhost:5001";
 
   // Debug logging
@@ -81,8 +81,9 @@ const SignIn = () => {
   }, [GOOGLE_CLIENT_ID]);
 
   const handleGoogleSignInCallback = async (response) => {
+    console.log('Google Sign-In response:', response);
     try {
-      const result = await fetch(`${API_BASE_URL}/api/auth/google`, {
+      const result = await fetch(`${API_BASE_URL}/api/google`, { // Corrected endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,8 +99,9 @@ const SignIn = () => {
       if (result.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/UserDashboard');
+        navigate('/dashboard');
       } else {
+        console.error('Google sign-in failed:', data);
         setError(data.message || 'Google sign-in failed');
       }
     } catch (err) {
