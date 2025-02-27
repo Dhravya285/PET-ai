@@ -8,19 +8,32 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,  // Ensures email is unique
+    unique: true,
   },
   password: {
     type: String,
-    required: true,  // Make sure password is required
+    required: function() {
+      return !this.googleId; // Make password required only if googleId is not present
+    },
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow multiple documents without googleId
   },
   profilePicture: { type: String, default: '' },
-bio: { type: String, default: '' },
-socialLinks: { type: Map, of: String }, // e.g., { linkedin: '', github: '' }
-
+  bio: { type: String, default: '' },
+  socialLinks: { type: Map, of: String }, // e.g., { linkedin: '', github: '' }
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
+  },
 });
-
-
 
 const User = mongoose.model('User', userSchema);
 
