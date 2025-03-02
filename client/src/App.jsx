@@ -18,6 +18,8 @@ import NotFound from './Pages/pet/NotFound.jsx';
 import ProtectedRoute from './Pages/pet/ProtectedRoute.jsx';
 import Chatbot from './Pages/pet/Chatbot.jsx';
 import AddPetForm from './components/admin/AddPetForm.jsx';
+// import EmailVerification from './Pages/pet/EmailVerfication.jsx';
+// import ResendVerification from './Pages/pet/ResendVerfication.jsx';
 
 const App = () => {
   return (
@@ -48,6 +50,9 @@ const App = () => {
   } 
 />
 <Route path="/chatbot" element={<Chatbot/>}/>
+{/* <Route path="/verify-email" element={<EmailVerification/>}/>
+<Route path="/resend-verification" element={<ResendVerification/>}/> */}
+
           </Routes>
         </main>
         <Footer />

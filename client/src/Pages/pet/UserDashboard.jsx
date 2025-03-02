@@ -14,55 +14,91 @@ const UserDashboard = () => {
     pendingApplications: 0,
     adoptedPets: 0
   });
+  const [savedPets, setSavedPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/signin');
-        return;
-      }
-
-      try {
-        const response = await fetch('http://localhost:5001/api/user/userget', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            localStorage.removeItem('token');
-            navigate('/signin');
-            return;
-          }
-          throw new Error('Failed to fetch user data');
-        }
-
-        const userData = await response.json();
-        setProfileData({
-          ...profileData,
-          name: userData.name || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
-          address: userData.address || "",
-          savedPets: userData.savedPets || 0,
-          pendingApplications: userData.pendingApplications || 0,
-          adoptedPets: userData.adoptedPets || 0
-        });
-      } catch (err) {
-        setError('Failed to load user data');
-      } finally {
-        setLoading(false);
-      }
+    const fetchData = async () => {
+      await fetchUserData();
+      await fetchSavedPets();
     };
-
-    fetchUserData();
+    
+    fetchData();
   }, [navigate]);
+
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5001/api/user/userget', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/signin');
+          return;
+        }
+        throw new Error('Failed to fetch user data');
+      }
+
+      const userData = await response.json();
+      setProfileData({
+        ...profileData,
+        name: userData.name || "",
+        email: userData.email || "",
+        phone: userData.phone || "",
+        address: userData.address || "",
+        pendingApplications: userData.pendingApplications || 0,
+        adoptedPets: userData.adoptedPets || 0
+      });
+    } catch (err) {
+      setError('Failed to load user data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSavedPets = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5001/api/favorites', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch saved pets');
+      }
+
+      const data = await response.json();
+      setSavedPets(data);
+      // Update the profile data with the count
+      setProfileData(prev => ({
+        ...prev,
+        savedPets: data.length
+      }));
+    } catch (err) {
+      console.error('Error fetching saved pets:', err);
+    }
+  };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -88,6 +124,31 @@ const UserDashboard = () => {
       setTimeout(() => setUpdateSuccess(false), 3000);
     } catch (err) {
       setError('Failed to update profile');
+    }
+  };
+
+  const handleRemoveFavorite = async (petId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:5001/api/favorites/${petId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Update the state to remove the pet
+        setSavedPets(savedPets.filter(pet => pet.petId !== petId));
+        // Update the count
+        setProfileData(prev => ({
+          ...prev,
+          savedPets: prev.savedPets - 1
+        }));
+      }
+    } catch (error) {
+      console.error('Error removing pet from favorites:', error);
     }
   };
 
@@ -202,6 +263,36 @@ const UserDashboard = () => {
     </div>
   );
 
+  const renderSavedPets = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Saved Pets</h2>
+      {savedPets.length === 0 ? (
+        <p className="text-gray-500">You haven't saved any pets yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {savedPets.map(pet => (
+            <div key={pet.petId} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <img src={pet.petImage} alt={pet.petName} className="w-full h-48 object-cover" />
+              <div className="p-4">
+                <h3 className="font-bold text-lg">{pet.petName}</h3>
+                <p className="text-gray-600">{pet.petBreed}</p>
+                <div className="mt-4 flex justify-between">
+                  <Link to={`/pet/${pet.petId}`} className="text-blue-600 hover:underline">View Details</Link>
+                  <button 
+                    onClick={() => handleRemoveFavorite(pet.petId)} 
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">User Dashboard</h1>
@@ -232,10 +323,24 @@ const UserDashboard = () => {
             Profile
           </div>
         </button>
+        <button
+          onClick={() => setActiveSection('savedPets')}
+          className={`px-4 py-2 rounded-lg transition duration-300 ${
+            activeSection === 'savedPets'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          <div className="flex items-center">
+            <Heart className="w-4 h-4 mr-2" />
+            Saved Pets
+          </div>
+        </button>
       </div>
       
       {activeSection === 'overview' && renderOverview()}
       {activeSection === 'profile' && renderProfile()}
+      {activeSection === 'savedPets' && renderSavedPets()}
     </div>
   );
 };

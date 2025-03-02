@@ -33,6 +33,8 @@ const userSchema = new mongoose.Schema({
     enum: ['local', 'google'],
     default: 'local',
   },
+  
+  
 });
 
 const User = mongoose.model('User', userSchema);

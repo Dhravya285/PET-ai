@@ -7,6 +7,7 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
   // Temporarily hardcode the client ID for testing
@@ -83,7 +84,7 @@ const SignIn = () => {
   const handleGoogleSignInCallback = async (response) => {
     console.log('Google Sign-In response:', response);
     try {
-      const result = await fetch(`${API_BASE_URL}/api/google`, { // Corrected endpoint
+      const result = await fetch(`${API_BASE_URL}/api/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,6 +140,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -160,6 +162,8 @@ const SignIn = () => {
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -204,8 +208,9 @@ const SignIn = () => {
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+              disabled={isLoading}
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 

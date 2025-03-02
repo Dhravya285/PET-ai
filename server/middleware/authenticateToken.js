@@ -6,6 +6,14 @@ const authenticateToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: 'Access Denied' });
   }
+  if (token === 'guest-token') {
+    // Set up guest user
+    req.user = {
+      id: null,  // No user ID for guests
+      username: 'Guest'
+    };
+    return next();
+  }
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);

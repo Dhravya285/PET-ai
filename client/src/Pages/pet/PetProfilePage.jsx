@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Heart, DollarSign, MapPin } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 const PetProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isFavorited, setIsFavorited] = useState(false);
 
   // Mock data for the pet profile
   const pet = {
@@ -22,6 +23,33 @@ const PetProfilePage = () => {
     shelter: "Happy Paws Shelter",
     shelterLocation: "123 Main St, Anytown, USA",
   };
+
+  // Check if pet is already in favorites on component mount
+  useEffect(() => {
+    const checkIfFavorited = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await fetch('http://localhost:5001/api/favorites', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const favorites = await response.json();
+          const isAlreadyFavorited = favorites.some(fav => fav.petId === pet.id);
+          setIsFavorited(isAlreadyFavorited);
+        }
+      } catch (error) {
+        console.error("Error checking favorites status:", error);
+      }
+    };
+
+    checkIfFavorited();
+  }, [pet.id]);
 
   // Handle Adopt Now button click
   const handleAdoptNow = () => {
@@ -52,6 +80,43 @@ const PetProfilePage = () => {
     } catch (error) {
       console.error("Error decoding JWT:", error);
       alert("Invalid session. Please log in again.");
+    }
+  };
+
+  // Handle saving to favorites
+  const handleSaveToFavorites = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("User not authenticated. Please log in.");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5001/api/favorites/add', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          petId: pet.id,
+          petName: pet.name,
+          petBreed: pet.breed,
+          petImage: pet.image
+        })
+      });
+
+      if (response.ok) {
+        setIsFavorited(true);
+        alert("Pet saved to favorites!");
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to save pet to favorites");
+      }
+    } catch (error) {
+      console.error("Error saving pet to favorites:", error);
+      alert("Failed to connect to server");
     }
   };
 
@@ -100,8 +165,16 @@ const PetProfilePage = () => {
           >
             Adopt Now
           </button>
-          <button className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-100 transition duration-300 flex items-center">
-            <Heart className="mr-2" /> Save to Favorites
+          <button 
+            className={`${
+              isFavorited 
+                ? "bg-red-100 text-red-600 border border-red-600" 
+                : "bg-white text-blue-600 border border-blue-600"
+            } px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-100 transition duration-300 flex items-center`}
+            onClick={handleSaveToFavorites}
+          >
+            <Heart className={`mr-2 ${isFavorited ? "fill-red-600 text-red-600" : ""}`} /> 
+            {isFavorited ? "Saved to Favorites" : "Save to Favorites"}
           </button>
         </div>
       </div>
