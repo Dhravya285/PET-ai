@@ -146,45 +146,36 @@ const CommunityForum = () => {
     setNewPost({ title: '', content: '' });
     setNewPostModal(false);
     
-    // Try to also save to API if it was previously available
-    if (apiAvailable) {
-      // In handleCreatePost function
-fetch('http://localhost:5001/api/posts', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token') || 'guest-token'}`
-  },
-  body: JSON.stringify({
-    title: newPostObj.title,
-    content: newPostObj.content,
-    authorName: user.username // Include the username in the request
-  })
-})
-
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        return response.json();
+    // Try to save to API
+    fetch('http://localhost:5001/api/posts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: newPostObj.title,
+        content: newPostObj.content,
+        authorName: user.username
       })
-      .then(data => {
-        // Replace our local post ID with the server-generated one
-        setPosts(prevPosts =>
-          prevPosts.map(post =>
-            post._id === newPostObj._id ? { ...post, _id: data._id } : post
-          )
-        );
-      })
-      .catch(err => {
-        console.log('API error when creating post:', err);
-        // Mark as offline mode if we get an error
-        if (apiAvailable) {
-          setApiAvailable(false);
-          setError("Connected in offline mode. Your posts will be visible but not saved to the server.");
-        }
-      });
-    }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Replace our local post ID with the server-generated one
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post._id === newPostObj._id ? { ...post, _id: data._id } : post
+        )
+      );
+    })
+    .catch(err => {
+      console.error('Post creation error:', err);
+      setError("Unable to save post to server. It will remain in local view.");
+    });
   };
 
   const handleLike = (postId) => {

@@ -56,7 +56,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      <section className="mb-12">
+      {/* <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Our Team</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
@@ -74,7 +74,7 @@ const AboutPage = () => {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Join Our Mission</h2>
@@ -82,12 +82,12 @@ const AboutPage = () => {
           We're always looking for passionate individuals and organizations to join our mission. Whether you're
           interested in volunteering, partnering with us as a shelter, or joining our team, we'd love to hear from you.
         </p>
-        <a
+        {/* <a
           href="/contact"
           className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-300"
         >
           Get Involved
-        </a>
+        </a> */}
       </section>
     </div>
   );

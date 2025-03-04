@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 const express = require('express');
 const userRoutes = require('./Routes/User');
 const cors = require('cors');
+const authMiddleware = require('./middleware/authenticateToken')
 const helmet = require('helmet')
 const connectDB = require('./config/db');
 const authRoutes = require('./Routes/auth');

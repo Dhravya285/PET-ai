@@ -43,27 +43,38 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create post
+
+
+// Create post route
 router.post('/', auth, async (req, res) => {
-    try {
-      const { title, content } = req.body;
-      
-      // For custom usernames from the frontend
-      const guestUsername = req.body.authorName; 
-      
-      const newPost = new Post({
-        title,
-        content,
-        // Use the custom username if available, otherwise use the one from auth
-        authorName: (req.user.id === null && guestUsername) ? guestUsername : req.user.username
-      });
-      
-      const post = await newPost.save();
-      res.json(post);
-    } catch (err) {
-      console.error('Post creation error:', err);
-      res.status(500).json({ message: 'Server Error', details: err.message });
+  try {
+    const { title, content, authorName } = req.body;
+    
+    // Validate required fields
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required' });
     }
-  });
+
+    // Create post
+    const newPost = new Post({
+      title,
+      content,
+      // Use the custom username if available, otherwise use the one from auth
+      authorName: authorName || req.user.username || 'Anonymous',
+      author: req.user.id || null // Allow null for guest users
+    });
+    
+    const post = await newPost.save();
+    res.status(201).json(post);
+  } catch (err) {
+    console.error('Post creation error:', err);
+    res.status(500).json({ 
+      message: 'Server Error', 
+      details: err.message 
+    });
+  }
+});
+
 
 // Update post
 router.put('/:id', auth, async (req, res) => {
