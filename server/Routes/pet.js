@@ -27,6 +27,30 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST a new pet
+// router.post('/api/v1/pets',async (req,res)=>{
+//   const data=req.body;
+//   const newPet=await Pet.insertOne({
+//     name:data.name,
+//     breed:data.breed,
+//     age:data.age,
+//     size:data.size,
+//     location:data.location,
+//     image:data.image,
+//     status:data.status,
+//     description:data.description,
+//     type:data.type,
+
+
+//   })
+//   res.json({data});
+//   console.log(data);
+// })
+
+
+
+
+
+
 router.post('/', async (req, res) => {
   const pet = new Pet({
     name: req.body.name,
